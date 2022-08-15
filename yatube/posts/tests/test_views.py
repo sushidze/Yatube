@@ -1,13 +1,16 @@
 import shutil
 import tempfile
 
+from django.conf import settings
+from django.contrib.auth import get_user_model
+
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.cache import cache
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django import forms
 
-from ..models import *
+from ..models import Post, Group, Comment, Follow
 
 
 User = get_user_model()
@@ -174,8 +177,6 @@ class PostViewsTest(TestCase):
         for value, expected in form_fields.items():
             with self.subTest(value=value):
                 form_field = response.context['form'].fields[value]
-                # Проверяет, что поле формы является экземпляром
-                # указанного класса
                 self.assertIsInstance(form_field, expected)
 
         first_object = response.context['post']
@@ -225,7 +226,7 @@ class PostViewsTest(TestCase):
 
     def test_follow_index_show_new_post_for_auth(self):
         cache.clear()
-        subscribe = self.authorized_client.get(reverse(
+        self.authorized_client.get(reverse(
             'posts:profile_follow',
             kwargs={'username': 'author'}
         ))
@@ -256,7 +257,8 @@ class PostViewsTest(TestCase):
         Post.objects.create(
             author=self.author,
             text='Проверка кэша',
-            group=self.group)
+            group=self.group
+        )
         after_create_post = self.authorized_client.get(reverse('posts:index'))
         first_item_after = after_create_post.content
         self.assertEqual(first_item_after, first_item_before)

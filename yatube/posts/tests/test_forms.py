@@ -131,7 +131,10 @@ class PostCreateFormTests(TestCase):
             data=form_data,
             follow=True
         )
-        self.assertRedirects(response, f'/auth/login/?next=/posts/{self.post.id}/comment/')
+        self.assertRedirects(
+            response,
+            f'/auth/login/?next=/posts/{self.post.id}/comment/'
+        )
         self.assertEqual(Comment.objects.count(), comments_count)
 
     def test_create_comment(self):
@@ -153,12 +156,12 @@ class PostCreateFormTests(TestCase):
 
     def test_auth_user_can_subscribe_and_unsubscribe(self):
         count_followers = Follow.objects.count()
-        subscribe = self.authorized_client.get(reverse(
+        self.authorized_client.get(reverse(
             'posts:profile_follow',
             kwargs={'username': 'user'}
         ))
         self.assertEqual(Follow.objects.count(), count_followers + 1)
-        unsubscribe = self.authorized_client.get(reverse(
+        self.authorized_client.get(reverse(
             'posts:profile_unfollow',
             kwargs={'username': 'user'}
         ))
