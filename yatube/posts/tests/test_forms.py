@@ -7,8 +7,8 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
-from ..forms import PostForm, CommentForm
-from ..models import Post, Group, Comment
+from ..forms import PostForm
+from ..models import Post, Group, Comment, Follow
 
 
 User = get_user_model()
@@ -22,6 +22,7 @@ class PostCreateFormTests(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.author = User.objects.create_user(username='author')
+        cls.user = User.objects.create_user(username='user')
         cls.group = Group.objects.create(
             title='Группа для теста',
             slug='test-slug',
@@ -112,7 +113,6 @@ class PostCreateFormTests(TestCase):
         form_data = {
             'text': 'Тестовый текст',
         }
-        # Отправляем POST-запрос
         response = self.guest_client.post(
             reverse('posts:post_create'),
             data=form_data,
@@ -126,7 +126,6 @@ class PostCreateFormTests(TestCase):
         form_data = {
             'text': 'комментарий',
         }
-        # Отправляем POST-запрос
         response = self.guest_client.post(
             reverse('posts:add_comment', kwargs={'post_id': self.post.id}),
             data=form_data,
@@ -151,3 +150,16 @@ class PostCreateFormTests(TestCase):
             reverse('posts:post_detail', kwargs={'post_id': self.post.id})
         )
         self.assertEqual(Comment.objects.count(), comments_count + 1)
+
+    def test_auth_user_can_subscribe_and_unsubscribe(self):
+        count_followers = Follow.objects.count()
+        subscribe = self.authorized_client.get(reverse(
+            'posts:profile_follow',
+            kwargs={'username': 'user'}
+        ))
+        self.assertEqual(Follow.objects.count(), count_followers + 1)
+        unsubscribe = self.authorized_client.get(reverse(
+            'posts:profile_unfollow',
+            kwargs={'username': 'user'}
+        ))
+        self.assertEqual(Follow.objects.count(), count_followers)

@@ -1,15 +1,13 @@
 import shutil
 import tempfile
 
-from django.contrib.auth import get_user_model
-from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.cache import cache
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django import forms
 
-from ..models import Post, Group, Comment
+from ..models import *
 
 
 User = get_user_model()
@@ -52,6 +50,10 @@ class PostViewsTest(TestCase):
             post=cls.post,
             author=cls.author,
             text='комментарий'
+        )
+        cls.follow = Follow.objects.create(
+            user=User.objects.create_user(username='user'),
+            author=cls.author
         )
 
         cls.authorized_client = Client()
@@ -221,8 +223,26 @@ class PostViewsTest(TestCase):
         self.assertEqual(first_object_author, 'author')
         self.assertEqual(first_object_group, 'Группа для теста')
 
+    def test_follow_index_show_new_post_for_auth(self):
+        cache.clear()
+        subscribe = self.authorized_client.get(reverse(
+            'posts:profile_follow',
+            kwargs={'username': 'author'}
+        ))
+        response = self.authorized_client.get(reverse('posts:follow_index'))
+        first_object = response.context['page_obj'][0]
+        first_object_text = first_object.text
+        first_object_group = first_object.group.title
+        first_object_author = first_object.author.username
+        self.assertEqual(first_object_text, 'Пост для теста' * 5)
+        self.assertEqual(first_object_author, 'author')
+        self.assertEqual(first_object_group, 'Группа для теста')
+
     def test_show_new_comment(self):
-        response = self.authorized_client.get(reverse('posts:post_detail', kwargs={'post_id': self.post.id}))
+        response = self.authorized_client.get(reverse(
+            'posts:post_detail',
+            kwargs={'post_id': self.post.id}
+        ))
         first_comment = response.context['comments'][0]
         first_comment_text = first_comment.text
         first_comment_author = first_comment.author.username
