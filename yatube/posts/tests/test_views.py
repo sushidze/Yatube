@@ -66,6 +66,7 @@ class PostViewsTest(TestCase):
 
     def test_pages_uses_correct_template(self):
         cache.clear()
+        self.authorized_client.force_login(self.author)
         templates_page_names = {
             reverse(
                 'posts:index'
@@ -148,6 +149,7 @@ class PostViewsTest(TestCase):
         self.assertEqual(first_object_img, self.post.image)
 
     def test_post_create_show_correct_context(self):
+        self.authorized_client.force_login(self.author)
         response = self.authorized_client.get(reverse('posts:post_create'))
         form_fields = {
             'group': forms.fields.ChoiceField,
@@ -160,6 +162,7 @@ class PostViewsTest(TestCase):
                 self.assertIsInstance(form_field, expected)
 
     def test_post_edit_show_correct_context(self):
+        self.authorized_client.force_login(self.author)
         response = self.authorized_client.get(
             reverse(
                 'posts:post_edit',
