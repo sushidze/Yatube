@@ -165,3 +165,13 @@ class PostCreateFormTests(TestCase):
             kwargs={'username': 'user'}
         ))
         self.assertEqual(Follow.objects.count(), count_followers)
+        self.assertEqual(Follow.objects.count(), count_followers)
+        self.assertEqual(self.author.follower.count(), 0)
+        'Проверьте, что правильно считается подписки'
+        self.authorized_client.get(reverse(
+            'posts:profile_follow',
+            kwargs={'username': 'author'}
+        ))
+        self.assertEqual(self.author.follower.count(), 0)
+        'Проверьте, что нельзя подписаться на самого себя'
+
