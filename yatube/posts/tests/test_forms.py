@@ -174,4 +174,3 @@ class PostCreateFormTests(TestCase):
         ))
         self.assertEqual(self.author.follower.count(), 0)
         'Проверьте, что нельзя подписаться на самого себя'
-
