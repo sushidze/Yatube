@@ -1,3 +1,4 @@
+import os
 import shutil
 import tempfile
 
@@ -10,12 +11,12 @@ from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django import forms
 
-from ..models import Post, Group, Comment, Follow
+from ..models import Post, Group, Comment
 
 
 User = get_user_model()
 
-TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.MEDIA_ROOT)
+TEMP_MEDIA_ROOT = os.path.join(settings.BASE_DIR, '123/')
 
 
 @override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
@@ -53,10 +54,6 @@ class PostViewsTest(TestCase):
             post=cls.post,
             author=cls.author,
             text='комментарий'
-        )
-        cls.follow = Follow.objects.create(
-            user=User.objects.create_user(username='user'),
-            author=cls.author
         )
 
         cls.authorized_client = Client()
