@@ -23,6 +23,7 @@ class PostViewsTest(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        cls.user = User.objects.create_user(username='user')
         cls.author = User.objects.create_user(username='author')
         cls.group = Group.objects.create(
             title='Группа для теста',
@@ -222,6 +223,7 @@ class PostViewsTest(TestCase):
 
     def test_follow_index_show_new_post_for_auth(self):
         cache.clear()
+        self.authorized_client.force_login(self.user)
         self.authorized_client.get(reverse(
             'posts:profile_follow',
             kwargs={'username': 'author'}
