@@ -75,18 +75,15 @@ def post_detail(request, post_id):
 @login_required()
 def post_create(request):
     template = 'posts/create_post.html'
-    if request.method == 'POST':
-        form = PostForm(
-            request.POST or None,
-            files=request.FILES or None,
-        )
-        if form.is_valid():
-            post = form.save(commit=False)
-            post.author = request.user
-            form.save()
-            return redirect('posts:profile', request.user.username)
-        return render(request, template, {'form': form})
-    form = PostForm()
+    form = PostForm(
+        request.POST or None,
+        files=request.FILES or None,
+    )
+    if form.is_valid():
+        post = form.save(commit=False)
+        post.author = request.user
+        form.save()
+        return redirect('posts:profile', request.user.username)
     return render(request, template, {'form': form})
 
 
@@ -139,26 +136,24 @@ def follow_index(request):
 
 @login_required
 def profile_follow(request, username):
-    if request.user.is_authenticated:
-        if request.user == User.objects.get(username=username):
-            return redirect(f'/profile/{username}/')
+    if request.user == get_object_or_404(User, username=username):
+        return redirect('posts:follow_index')
+    else:
+        if Follow.objects.filter(
+                user=request.user,
+                author=get_object_or_404(User, username=username)
+        ):
+            return redirect('posts:follow_index')
         else:
-            if Follow.objects.filter(
-                    user=request.user,
-                    author=User.objects.get(username=username)
-            ):
-                return redirect(f'/profile/{username}/')
-            else:
-                Follow.objects.create(
-                    user=request.user,
-                    author=User.objects.get(username=username)
-                )
-                return redirect(f'/profile/{username}/')
-    return redirect('/auth/login/')
+            Follow.objects.create(
+                user=request.user,
+                author=get_object_or_404(User, username=username)
+            )
+            return redirect('posts:follow_index')
 
 
 @login_required
 def profile_unfollow(request, username):
-    follower = User.objects.get(username=username)
+    follower = get_object_or_404(User, username=username)
     Follow.objects.filter(user=request.user, author=follower).delete()
     return redirect('posts:follow_index')

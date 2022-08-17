@@ -37,9 +37,10 @@ class Post(CreatedModel):
 
     )
     image = models.ImageField(
-        'Картинка',
         upload_to='posts/',
-        blank=True
+        blank=True,
+        verbose_name='Изображение',
+        help_text='Выберите изображение для загрузки'
     )
 
     class Meta:
@@ -86,11 +87,13 @@ class Follow(models.Model):
         related_name='following',
         on_delete=models.CASCADE,
     )
-    constraints = [
-        models.UniqueConstraint(
-            fields=('user', 'author'), name="unique_followers"
-        ),
-        models.CheckConstraint(
-            check=~models.Q(user=models.F('author')),
-            name='do not selffollow'),
-    ]
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=('user', 'author'), name="unique_followers"
+            ),
+            models.CheckConstraint(
+                check=~models.Q(user=models.F('author')),
+                name='do not selffollow'),
+        ]
