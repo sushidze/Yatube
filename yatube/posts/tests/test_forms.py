@@ -69,7 +69,6 @@ class PostCreateFormTests(TestCase):
             'text': 'Тестовый текст',
             'image': self.uploaded,
         }
-        # Отправляем POST-запрос
         response = self.authorized_client.post(
             reverse('posts:post_create'),
             data=form_data,
@@ -153,24 +152,30 @@ class PostCreateFormTests(TestCase):
         )
         self.assertEqual(Comment.objects.count(), comments_count + 1)
 
-    def test_auth_user_can_subscribe_and_unsubscribe(self):
+    def test_auth_user_can_subscribe(self):
         count_followers = Follow.objects.count()
         self.authorized_client.get(reverse(
             'posts:profile_follow',
             kwargs={'username': 'user'}
         ))
         self.assertEqual(Follow.objects.count(), count_followers + 1)
+
+    def test_auth_user_can_unsubscribe(self):
+        count_followers = Follow.objects.count()
+        Follow.objects.create(
+            user=self.author,
+            author=self.user
+        )
         self.authorized_client.get(reverse(
             'posts:profile_unfollow',
             kwargs={'username': 'user'}
         ))
         self.assertEqual(Follow.objects.count(), count_followers)
-        self.assertEqual(Follow.objects.count(), count_followers)
-        self.assertEqual(self.author.follower.count(), 0)
-        'Проверьте, что правильно считается подписки'
+
+    def test_auth_user_cant_subscribe_on_hisself(self):
+        count_followers = Follow.objects.count()
         self.authorized_client.get(reverse(
             'posts:profile_follow',
             kwargs={'username': 'author'}
         ))
-        self.assertEqual(self.author.follower.count(), 0)
-        'Проверьте, что нельзя подписаться на самого себя'
+        self.assertEqual(self.author.follower.count(), count_followers)
